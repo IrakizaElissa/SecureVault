@@ -3,10 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureVault Explorer</title>
-    </head>
+    <title>SecureVault - Enterprise File Explorer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <div class="app-container">
+        <!-- Left Column: File Tree -->
+        <div class="left-panel">
+            <header class="app-header">
+                <div class="logo">
+                    <span class="logo-text">SecureVault</span>
+                    <span class="subtitle">Enterprise File Explorer</span>
+                </div>
+                <div class="version-badge">v1.0.0</div>
+            </header>
+
+            <div class="search-container">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        class="search-input" 
+                        placeholder="Search files and folders..."
+                        aria-label="Search files and folders"
+                    >
+                    <button id="clear-search" class="clear-btn" aria-label="Clear search" style="display: none;">×</button>
+                </div>
+                <div class="search-hint">Ctrl+F to search</div>
+                <div id="search-results-count" class="search-results"></div>
+            </div>
+
+            <div class="tree-container" role="tree" aria-label="File tree">
+                <ul id="file-tree" class="file-tree"></ul>
+            </div>
+        </div>
+
+        <!-- Right Column: Details Panel -->
+        <div class="right-panel">
+            <div class="details-panel">
+                <h2 class="details-title" id="details-title">Select a file</h2>
+                <div id="details-content" class="details-content">
+                    <p class="details-placeholder">Click on a file to view its properties</p>
+                </div>
+            </div>
+
+            <div class="keyboard-shortcuts">
+                <h3>Keyboard Shortcuts</h3>
+                <ul>
+                    <li><kbd>↑</kbd> / <kbd>↓</kbd> Navigate</li>
+                    <li><kbd>←</kbd> / <kbd>→</kbd> Collapse/Expand</li>
+                    <li><kbd>Enter</kbd> Select</li>
+                    <li><kbd>Ctrl</kbd>+<kbd>Click</kbd> Multi-select</li>
+                    <li><kbd>Shift</kbd>+<kbd>Click</kbd> Range select</li>
+                    <li><kbd>Ctrl</kbd>+<kbd>A</kbd> Select all visible</li>
+                    <li><kbd>Ctrl</kbd>+<kbd>F</kbd> Search</li>
+                    <li><kbd>Esc</kbd> Clear selection</li>
+                </ul>
+            </div>
+
+            <div class="status-bar">
+                <span id="status-items">Items: 0</span>
+                <span id="status-selected">Selected: 0</span>
+                <span id="status-search">Search: 0 results</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
