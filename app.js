@@ -341,6 +341,92 @@ async function loadData() {
     renderTree();
 }
 
+// ===== Search & Filter =====
+
+let searchDebounceTimer = null;
+
+function performSearch(query) {
+    state.searchQuery = query.trim();
+    state.searchResults.clear();
+    state.autoExpandedIds.clear();
+    
+    if (!state.searchQuery) {
+        document.getElementById('clear-search').style.display = 'none';
+        document.getElementById('search-results-count').textContent = '';
+        renderTree();
+        return;
+    }
+    
+    document.getElementById('clear-search').style.display = 'block';
+    
+    // Find all matching nodes
+    const matches = new Set();
+    
+    function searchNodes(nodes) {
+        for (const node of nodes) {
+            if (node.name.toLowerCase().includes(state.searchQuery.toLowerCase())) {
+                matches.add(node.id);
+            }
+            if (node.children) {
+                searchNodes(node.children);
+            }
+        }
+    }
+    
+    searchNodes(state.data);
+    
+    // For each match, add it and all its ancestors
+    function addAncestors(nodes, targetId, ancestors = []) {
+        for (const node of nodes) {
+            const newAncestors = [...ancestors, node.id];
+            
+            if (node.id === targetId) {
+                // Add all ancestors to results and auto-expand them
+                for (const ancestorId of ancestors) {
+                    state.searchResults.add(ancestorId);
+                    const ancestorNode = findNodeById(state.data, ancestorId);
+                    if (ancestorNode && ancestorNode.type === 'folder') {
+                        state.autoExpandedIds.add(ancestorId);
+                    }
+                }
+                state.searchResults.add(targetId);
+                return true;
+            }
+            
+            if (node.children) {
+                if (addAncestors(node.children, targetId, newAncestors)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    for (const matchId of matches) {
+        addAncestors(state.data, matchId);
+    }
+    
+    document.getElementById('search-results-count').textContent = `${matches.size} results`;
+    renderTree();
+}
+
+function clearSearch() {
+    state.searchQuery = '';
+    state.searchResults.clear();
+    state.autoExpandedIds.clear();
+    document.getElementById('search-input').value = '';
+    document.getElementById('clear-search').style.display = 'none';
+    document.getElementById('search-results-count').textContent = '';
+    renderTree();
+}
+
+function handleSearchInput(event) {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+        performSearch(event.target.value);
+    }, 150);
+}
+
 // ===== Keyboard Navigation =====
 
 function getVisibleItems() {
@@ -637,4 +723,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Keyboard navigation
     document.addEventListener('keydown', handleKeyDown);
+    
+    // Search handlers
+    const searchInput = document.getElementById('search-input');
+    searchInput.addEventListener('input', handleSearchInput);
+    
+    const clearBtn = document.getElementById('clear-search');
+    clearBtn.addEventListener('click', clearSearch);
 });
