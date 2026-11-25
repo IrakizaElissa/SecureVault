@@ -1,123 +1,168 @@
-# SecureVault-Dashboard
+# SecureVault - Enterprise File Explorer
 
-This challenge is designed to test your ability to bridge Computer Science fundamentals with Modern Frontend Engineering.
+A dark-themed, cyber-secure file explorer built with vanilla JavaScript. Features recursive tree rendering, advanced keyboard navigation, multi-select capabilities, and intelligent search with auto-expand.
 
-## 1. Business Scenario & Context
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-**Client:** SecureVault Inc.
-**Industry:** Enterprise Cloud Security
+## Features
 
-**The Problem:** SecureVault offers high-security cloud storage for law firms and banks. Their backend engineers have built a robust API that returns folder structures efficiently. However, their current frontend is a simple list that is hard to navigate. Clients are complaining that they can't manage nested files easily.
+### Core Functionality
+- **Recursive Tree Rendering**: Depth-first search algorithm renders nested folder structures with dynamic indentation
+- **Expand/Collapse Folders**: Click folders to toggle visibility of their contents
+- **File Selection**: Click files to view detailed properties in the details panel
+- **File Details Panel**: Displays name, type, size, and full path for selected files
 
-**Your Role:** You are the incoming Junior Frontend Engineer. Your task is to design and build a modern, high-performance "File Explorer" UI that impresses the CTO and the Design Lead.
+### Advanced Navigation
+- **Full Keyboard Navigation**:
+  - `↑` / `↓` - Navigate through visible items
+  - `←` / `→` - Collapse/expand folders or navigate to parent/child
+  - `Enter` - Select focused item or toggle folder
+  - `Ctrl+F` - Focus search bar
+  - `Esc` - Clear selection or search
+
+### Wildcard Feature: Multi-Select
+Power users can select multiple files for bulk operations:
+- **Ctrl+Click** - Toggle individual files in multi-selection
+- **Shift+Click** - Select range from last selected file to clicked file
+- **Ctrl+A** - Select all currently visible files
+- Multi-selection summary displays count and list of selected items
+
+### Search & Filter
+- **Intelligent Search**: Type to filter files and folders (debounced 150ms)
+- **Auto-Expand**: Automatically expands ancestor folders of search matches
+- **Text Highlighting**: Matching text is highlighted in yellow
+- **Result Count**: Shows number of matches in real-time
+- **Clear Button**: One-click to restore full tree view
+
+### Design System
+- **Cyber-Secure Dark Theme**: High-contrast color palette with electric accents
+- **Smooth Transitions**: All interactions feature fluid animations
+- **Focus Indicators**: Clear keyboard focus rings for accessibility
+- **Status Bar**: Real-time display of item count, selection count, and search results
+
+## Tech Stack
+
+- **Vanilla JavaScript** (ES6+) - No frameworks, no build tools
+- **CSS3** - Custom properties, Grid, Flexbox, animations
+- **HTML5** - Semantic markup with ARIA attributes
+
+## Setup Instructions
+
+No build step required! Simply open the application:
+
+1. Clone or download this repository
+2. Open `index.html` in any modern web browser
+3. The app will load `data.json` automatically (falls back to embedded data if fetch fails)
+
+```bash
+# Option 1: Double-click index.html
+
+# Option 2: Use a local server (optional)
+# Python 3
+python -m http.server 8000
+
+# Node.js
+npx serve
+
+# Then navigate to http://localhost:8000
+```
+
+## Recursive Strategy
+
+### Tree Rendering Algorithm
+The `buildTree(nodes, depth)` function implements depth-first traversal:
+1. Iterates through each node at the current level
+2. Creates DOM elements with depth-based indentation (`depth × 20px`)
+3. For folders, recursively calls `buildTree()` for children
+4. Returns a DocumentFragment for efficient DOM insertion
+
+### State Management
+Plain JavaScript object tracks application state:
+```javascript
+{
+  data: [],                    // Loaded JSON data
+  expandedIds: Set,            // Currently expanded folders
+  selectedId: string|null,     // Single selected file
+  focusedId: string|null,      // Keyboard-focused item
+  multiSelectedIds: Set,       // Multi-selected files
+  searchQuery: string,         // Current search text
+  searchResults: Set,          // IDs matching search
+  autoExpandedIds: Set         // Folders auto-expanded by search
+}
+```
+
+All UI updates are triggered by state mutations followed by `renderTree()`, which performs a full re-render of the visible tree structure.
+
+### Search Implementation
+1. **DFS through all nodes** to find matches by name
+2. **Walk up ancestor chain** for each match to build `searchResults` Set
+3. **Auto-expand ancestors** to make matches visible
+4. **Re-render tree** with non-matching items hidden
+
+## File Structure
+
+```
+secure-vault/
+├── index.html          # Main HTML structure
+├── styles.css          # Complete styling and design system
+├── app.js              # All JavaScript logic
+├── data.json           # File tree data structure
+├── design-system.md    # Design system documentation
+├── README.md           # Project documentation
+└── LICENSE             # MIT License
+```
+
+## Design System
+
+See [design-system.md](design-system.md) for complete documentation of:
+- Color palette (CSS custom properties)
+- Typography scale
+- Spacing system
+- Component states
+- Icon mapping
+- Accessibility standards
+
+## Browser Compatibility
+
+Tested and working in:
+- Chrome/Edge 90+
+- Firefox 88+
+- Safari 14+
+
+Requires ES6+ support (Arrow functions, template literals, Set, spread operator).
+
+## Wildcard Feature Rationale
+
+Multi-select improves productivity for power users managing large file systems:
+- **Bulk Operations**: Select multiple files for download, move, or delete
+- **Quick Comparison**: View properties of several files simultaneously
+- **Range Selection**: Shift+Click enables fast selection of file sequences
+- **Visual Feedback**: Clear indicators show multi-selected state
+
+This feature mimics familiar file explorer behavior (Windows Explorer, macOS Finder) to reduce learning curve.
+
+## Performance Considerations
+
+- **Full Re-render on State Change**: Simple approach, no virtual DOM overhead
+- **DocumentFragment**: Batch DOM operations for efficient insertion
+- **Debounced Search**: 150ms delay prevents excessive filtering on rapid typing
+- **CSS Transitions**: Hardware-accelerated transforms for smooth animations
+
+For extremely large file trees (>10,000 items), consider implementing:
+- Virtual scrolling
+- Incremental rendering
+- Memoized node lookups
+
+## License
+
+MIT License - See [LICENSE](LICENSE) file for details
+
+## Credits
+
+Built as part of the AmaliTech DEG Project-based challenges.
 
 ---
 
-## 2. The Assignment Stages
-
-This is a **hybrid design/engineering challenge**. You are expected to demonstrate competence in both visual design logic and algorithmic frontend implementation.
-
-### Phase 1: The Design System
-
-**Before writing code, you must design the interface.**
-
-- **Deliverable:** A link to a design file (Figma, Penpot, or Sketch) or a PDF export of your design frames.
-- **Requirement:** Your design file must include a dedicated **"Design System" page** that defines:
-  - **Typography Scale**
-  - **Color Palette**
-  - **Spacing Grid**
-  - **Component States**
-- **Brand Guidelines:** SecureVault wants a "Dark Mode" aesthetic that feels "cyber-secure, precise, and fast."
-
-### Phase 2: The Implementation
-
-**Build the application using the design system you created in Phase 1.**
-
-- **Constraint:** You **cannot** use component libraries like Bootstrap, Material UI, Chakra UI, or Ant Design. You must build your components from scratch to prove you understand CSS layout and component abstraction.
-- **Note:** CSS frameworks like Tailwind are allowed _only_ if you use them to build your own reusable component architecture.
-
----
-
-## 3. User Stories & Acceptance Criteria
-
-### Core Features (Required)
-
-#### Story 1: The Recursive Tree
-
-> "As a lawyer with 10 years of case files, I need to navigate deeply nested folders without reloading the page."
-
-- **AC 1:** The UI renders the folder structure from the provided JSON.
-- **AC 2:** The component structure must be **recursive**. It should handle 2 levels of depth or 20 levels without breaking the UI.
-- **AC 3:** Folders must expand/collapse on click.
-
-#### Story 2: File Details & Inspection
-
-> "As a user, I need to see file metadata to ensure I'm opening the right version."
-
-- **AC 1:** Clicking a file "selects" it (distinct visual state based on your design).
-- **AC 2:** A "Properties Panel" displays the selected file's Name, Type, and Size.
-
-#### Story 3: Keyboard Accessibility
-
-> "As a power user, I hate reaching for my mouse. I want to navigate the vault using only my keyboard."
-
-- **AC 1:** `Up/Down` arrows move focus between the visible items in the explorer.
-- **AC 2:** `Right` arrow expands a folder; `Left` arrow collapses it.
-- **AC 3:** `Enter` selects the file.
-
-### The "Wildcard" Feature (Required)
-
-#### Story 4: The Innovation Clause
-
-> "As a developer, I want to add one feature that the client didn't ask for, but would significantly improve the user experience."
-
-- **Task:** Identify a gap in the requirements. What is missing?
-- **AC 1:** Implement **one** additional feature of your choice.
-- **AC 2:** In your README, explain _why_ you chose this feature and how it adds value to the business.
-
-### Bonus Feature (Optional)
-
-#### Story 5: Search & Filter
-
-- **AC 1:** A search bar filters the view. Matching items deep inside folders should force those folders to expand automatically.
-
----
-
-## 4. Technical Requirements
-
-- **Data:** Use the `data.json` file provided in this repo. Do not edit the JSON structure, but you may add more items to test performance.
-- **Tech Stack:** React, Vue, Svelte, or Vanilla JS.
-- **Documentation:** Your README in the submission must include:
-  1.  Setup instructions.
-  2.  Link to your Design File.
-  3.  Explanation of your **Recursive Strategy** (how you managed the data structure).
-  4.  Explanation of your **Wildcard Feature**.
-
----
-
-## 5. Submission Instructions
-
-1.  **Fork** this repository.
-2.  Complete the code in your fork.
-3.  **Update the README:**
-    - **Delete** all the instructions in this file (the text you are reading now).
-    - **Replace** them with your own documentation as outlined in Section 4.
-    - _Note: Do not append your docs to the end. The final README should look like a professional project documentation, not a homework assignment._
-4.  Submit your repo link via the [online](https://forms.cloud.microsoft/e/PrfSgKKQ0k) form.
-
----
-
-### ⚠️ CRITICAL: Pre-Submission Checklist
-
-**STOP and review your work.** To be eligible for the Solution Defense interview, your submission **MUST** pass the following "Gatekeeper" checks.
-
-If any of the following are incorrect, your submission will be flagged as incomplete and you will **NOT** be invited for an interview.
-
-1.  **Public Repository:** Is your GitHub repository set to **Public**? (Private links will be auto-rejected).
-2.  **Audit-Ready History:** Does your Git commit history show your progress over time? (Repositories with a single "Initial Commit" or "Upload files" containing the entire project will be **rejected as unverifiable**).
-3.  **Working Deployment:** Have you tested your live link in an **Incognito/Private** window to ensure it loads without errors?
-4.  **No Restricted Libraries:** Did you build your own components? (Submissions using **Bootstrap, Material UI, or Chakra UI** will be disqualified).
-5.  **Design File Access:** Is your Figma/Penpot link included and set to **"Anyone with the link can view"**?
-6.  **Documentation:** Have you deleted the original assignment text from the `README.md` and replaced it with your own project documentation?
-
-> **By submitting your work, you acknowledge that failure to meet these criteria effectively ends your application process.**
+**Version**: 1.0.0  
+**Last Updated**: 2025
