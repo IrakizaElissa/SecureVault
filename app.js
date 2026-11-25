@@ -341,6 +341,169 @@ async function loadData() {
     renderTree();
 }
 
+// ===== Keyboard Navigation =====
+
+function getVisibleItems() {
+    const items = [];
+    
+    function traverse(nodes, parentExpanded = true) {
+        for (const node of nodes) {
+            const isMatch = state.searchQuery.length === 0 || state.searchResults.has(node.id);
+            
+            if (parentExpanded && isMatch) {
+                items.push(node);
+            }
+            
+            if (node.children) {
+                const isExpanded = state.expandedIds.has(node.id) || state.autoExpandedIds.has(node.id);
+                traverse(node.children, parentExpanded && isMatch && isExpanded);
+            }
+        }
+    }
+    
+    traverse(state.data);
+    return items;
+}
+
+function scrollItemIntoView(id) {
+    const item = document.querySelector(`[data-id="${id}"]`);
+    if (item) {
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+}
+
+function handleKeyDown(event) {
+    const visibleItems = getVisibleItems();
+    if (visibleItems.length === 0) return;
+    
+    // Ctrl+F: Focus search
+    if (event.ctrlKey && event.key === 'f') {
+        event.preventDefault();
+        document.getElementById('search-input').focus();
+        return;
+    }
+    
+    // Ctrl+A: Select all visible
+    if (event.ctrlKey && event.key === 'a') {
+        event.preventDefault();
+        state.multiSelectedIds.clear();
+        for (const item of visibleItems) {
+            if (item.type === 'file') {
+                state.multiSelectedIds.add(item.id);
+            }
+        }
+        state.selectedId = null;
+        renderTree();
+        updateDetailsPanel();
+        return;
+    }
+    
+    // Escape: Clear selection
+    if (event.key === 'Escape') {
+        if (state.searchQuery) {
+            document.getElementById('search-input').value = '';
+            clearSearch();
+        } else {
+            state.selectedId = null;
+            state.multiSelectedIds.clear();
+            state.focusedId = null;
+            renderTree();
+            updateDetailsPanel();
+        }
+        return;
+    }
+    
+    // Initialize focus if not set
+    if (!state.focusedId && visibleItems.length > 0) {
+        state.focusedId = visibleItems[0].id;
+    }
+    
+    const currentIndex = visibleItems.findIndex(item => item.id === state.focusedId);
+    if (currentIndex === -1) return;
+    
+    const currentItem = visibleItems[currentIndex];
+    
+    switch (event.key) {
+        case 'ArrowDown':
+            event.preventDefault();
+            if (currentIndex < visibleItems.length - 1) {
+                state.focusedId = visibleItems[currentIndex + 1].id;
+                renderTree();
+                scrollItemIntoView(state.focusedId);
+            }
+            break;
+            
+        case 'ArrowUp':
+            event.preventDefault();
+            if (currentIndex > 0) {
+                state.focusedId = visibleItems[currentIndex - 1].id;
+                renderTree();
+                scrollItemIntoView(state.focusedId);
+            }
+            break;
+            
+        case 'ArrowRight':
+            event.preventDefault();
+            if (currentItem.type === 'folder') {
+                if (!state.expandedIds.has(currentItem.id)) {
+                    state.expandedIds.add(currentItem.id);
+                    renderTree();
+                } else if (currentItem.children && currentItem.children.length > 0) {
+                    // Move to first child
+                    state.focusedId = currentItem.children[0].id;
+                    renderTree();
+                    scrollItemIntoView(state.focusedId);
+                }
+            }
+            break;
+            
+        case 'ArrowLeft':
+            event.preventDefault();
+            if (currentItem.type === 'folder' && state.expandedIds.has(currentItem.id)) {
+                state.expandedIds.delete(currentItem.id);
+                renderTree();
+            } else {
+                // Move to parent
+                const parent = findParentNode(state.data, currentItem.id);
+                if (parent) {
+                    state.focusedId = parent.id;
+                    renderTree();
+                    scrollItemIntoView(state.focusedId);
+                }
+            }
+            break;
+            
+        case 'Enter':
+            event.preventDefault();
+            if (currentItem.type === 'folder') {
+                if (state.expandedIds.has(currentItem.id)) {
+                    state.expandedIds.delete(currentItem.id);
+                } else {
+                    state.expandedIds.add(currentItem.id);
+                }
+            } else {
+                state.selectedId = currentItem.id;
+                state.multiSelectedIds.clear();
+                updateDetailsPanel();
+            }
+            renderTree();
+            break;
+    }
+}
+
+function findParentNode(nodes, targetId, parent = null) {
+    for (const node of nodes) {
+        if (node.id === targetId) {
+            return parent;
+        }
+        if (node.children) {
+            const found = findParentNode(node.children, targetId, node);
+            if (found !== null) return found;
+        }
+    }
+    return null;
+}
+
 // ===== Details Panel =====
 
 function updateDetailsPanel() {
@@ -443,4 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tree click handler
     const treeContainer = document.getElementById('file-tree');
     treeContainer.addEventListener('click', handleTreeClick);
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', handleKeyDown);
 });
