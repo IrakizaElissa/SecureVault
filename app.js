@@ -341,6 +341,74 @@ async function loadData() {
     renderTree();
 }
 
+// ===== Details Panel =====
+
+function updateDetailsPanel() {
+    const title = document.getElementById('details-title');
+    const content = document.getElementById('details-content');
+    
+    if (state.multiSelectedIds.size > 0) {
+        // Multi-select summary
+        title.textContent = 'Multi-Selection';
+        
+        const summary = document.createElement('div');
+        summary.className = 'multi-select-summary';
+        
+        const summaryTitle = document.createElement('div');
+        summaryTitle.className = 'multi-select-title';
+        summaryTitle.textContent = `${state.multiSelectedIds.size} items selected`;
+        summary.appendChild(summaryTitle);
+        
+        const list = document.createElement('ul');
+        list.className = 'multi-select-list';
+        
+        for (const id of state.multiSelectedIds) {
+            const node = findNodeById(state.data, id);
+            if (node) {
+                const li = document.createElement('li');
+                li.className = 'multi-select-item';
+                li.textContent = `${getFileIcon(node.name, node.type)} ${node.name}`;
+                list.appendChild(li);
+            }
+        }
+        
+        summary.appendChild(list);
+        content.innerHTML = '';
+        content.appendChild(summary);
+    } else if (state.selectedId) {
+        // Single file selected
+        const node = findNodeById(state.data, state.selectedId);
+        if (node) {
+            title.textContent = 'File Properties';
+            
+            content.innerHTML = `
+                <div class="detail-item">
+                    <div class="detail-label">Name</div>
+                    <div class="detail-value">${node.name}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Type</div>
+                    <div class="detail-value">${getFileExtension(node.name)}</div>
+                </div>
+                ${node.size ? `
+                <div class="detail-item">
+                    <div class="detail-label">Size</div>
+                    <div class="detail-value">${node.size}</div>
+                </div>
+                ` : ''}
+                <div class="detail-item">
+                    <div class="detail-label">Path</div>
+                    <div class="detail-value">${getNodePath(state.data, state.selectedId)}</div>
+                </div>
+            `;
+        }
+    } else {
+        // No selection
+        title.textContent = 'Select a file';
+        content.innerHTML = '<p class="details-placeholder">Click on a file to view its properties</p>';
+    }
+}
+
 // ===== Event Handlers =====
 
 function handleTreeClick(event) {
@@ -358,6 +426,12 @@ function handleTreeClick(event) {
             state.expandedIds.add(id);
         }
         renderTree();
+    } else {
+        // File selection
+        state.selectedId = id;
+        state.multiSelectedIds.clear();
+        renderTree();
+        updateDetailsPanel();
     }
 }
 
