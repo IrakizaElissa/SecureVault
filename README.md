@@ -1,5 +1,7 @@
 # SecureVault - Enterprise File Explorer
 
+**Live Demo**: https://irakizaelissa.github.io/SecureVault/
+
 A dark-themed, cyber-secure file explorer built with vanilla JavaScript. Features recursive tree rendering, advanced keyboard navigation, multi-select capabilities, and intelligent search with auto-expand.
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
