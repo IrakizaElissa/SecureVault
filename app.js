@@ -590,9 +590,37 @@ function handleTreeClick(event) {
         }
         renderTree();
     } else {
-        // File selection
-        state.selectedId = id;
-        state.multiSelectedIds.clear();
+        // File selection with multi-select support
+        if (event.ctrlKey || event.metaKey) {
+            // Ctrl+Click: Toggle multi-select
+            if (state.multiSelectedIds.has(id)) {
+                state.multiSelectedIds.delete(id);
+            } else {
+                state.multiSelectedIds.add(id);
+            }
+            state.selectedId = null;
+        } else if (event.shiftKey && state.selectedId) {
+            // Shift+Click: Range select
+            const visibleItems = getVisibleItems().filter(item => item.type === 'file');
+            const lastIndex = visibleItems.findIndex(item => item.id === state.selectedId);
+            const currentIndex = visibleItems.findIndex(item => item.id === id);
+            
+            if (lastIndex !== -1 && currentIndex !== -1) {
+                const start = Math.min(lastIndex, currentIndex);
+                const end = Math.max(lastIndex, currentIndex);
+                
+                state.multiSelectedIds.clear();
+                for (let i = start; i <= end; i++) {
+                    state.multiSelectedIds.add(visibleItems[i].id);
+                }
+                state.selectedId = null;
+            }
+        } else {
+            // Plain click: Single select
+            state.selectedId = id;
+            state.multiSelectedIds.clear();
+        }
+        
         renderTree();
         updateDetailsPanel();
     }
