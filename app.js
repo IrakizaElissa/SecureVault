@@ -341,8 +341,32 @@ async function loadData() {
     renderTree();
 }
 
+// ===== Event Handlers =====
+
+function handleTreeClick(event) {
+    const item = event.target.closest('.tree-item');
+    if (!item) return;
+    
+    const id = item.getAttribute('data-id');
+    const type = item.getAttribute('data-type');
+    
+    if (type === 'folder') {
+        // Toggle expand/collapse
+        if (state.expandedIds.has(id)) {
+            state.expandedIds.delete(id);
+        } else {
+            state.expandedIds.add(id);
+        }
+        renderTree();
+    }
+}
+
 // ===== Initialize App =====
 
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
+    
+    // Tree click handler
+    const treeContainer = document.getElementById('file-tree');
+    treeContainer.addEventListener('click', handleTreeClick);
 });
